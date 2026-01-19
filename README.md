@@ -23,7 +23,7 @@ A production-ready, scalable real-time messaging platform built with Spring Boot
 - [Testing](#-testing)
 - [Contrinuting](#-contributing)
 - [Author](#-author)
-- [Acknowledgements](#-acknowledgements)
+- [Acknowledgements](#-acknowledgments)
 ---
 
 ## ✨ Features
