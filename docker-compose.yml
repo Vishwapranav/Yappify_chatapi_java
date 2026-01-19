@@ -1,0 +1,126 @@
+version: '3.8'
+
+services:
+  # Zookeeper (required for Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: yappify-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - chat-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kafka Broker
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: yappify-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_NUM_PARTITIONS: 3
+    networks:
+      - chat-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Kafka UI for monitoring
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: yappify-kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: yappify-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      DYNAMIC_CONFIG_ENABLED: "true"
+    networks:
+      - chat-network
+    restart: unless-stopped
+
+  # Your Chat API Application
+  chatapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatapi-app
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "5050:5050"
+    environment:
+      # Spring Profile
+      - SPRING_PROFILES_ACTIVE=docker
+
+      # MongoDB Configuration
+      - SPRING_DATA_MONGODB_URI=mongodb+srv://vishwapranav2003whatsapp:OZVeL0I64xb1hyBs@yappify-cluster.rkxpfqa.mongodb.net/yappify?retryWrites=true&w=majority
+
+      # JWT Configuration
+      - JWT_SECRET=myVeryLongSecretKeyThatIsAtLeast32CharactersLongForHS256
+      - JWT_EXPIRATION_MS=2592000000
+
+      # Kafka Configuration - IMPORTANT: Use internal Docker network address
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - KAFKA_TOPIC_CHAT_MESSAGES=chat-messages-topic
+
+      # Kafka Producer
+      - SPRING_KAFKA_PRODUCER_KEY_SERIALIZER=org.apache.kafka.common.serialization.StringSerializer
+      - SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER=org.springframework.kafka.support.serializer.JsonSerializer
+      - SPRING_KAFKA_PRODUCER_ACKS=1
+      - SPRING_KAFKA_PRODUCER_RETRIES=3
+
+      # Kafka Consumer
+      - SPRING_KAFKA_CONSUMER_GROUP_ID=chat-consumer-group
+      - SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET=latest
+      - SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER=org.apache.kafka.common.serialization.StringDeserializer
+      - SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER=org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      - SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_DESERIALIZER_VALUE_DELEGATE_CLASS=org.springframework.kafka.support.serializer.JsonDeserializer
+      - SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_TRUSTED_PACKAGES=*
+      - SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_USE_TYPE_INFO_HEADERS=false
+      - SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_VALUE_DEFAULT_TYPE=com.yappifychatapp.dto.KafkaMessageDTO
+
+      # Logging
+      - LOGGING_LEVEL_COM_YAPPIFYCHATAPP=DEBUG
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_KAFKA=INFO
+    networks:
+      - chat-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5050/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  chat-network:
+    driver: bridge
