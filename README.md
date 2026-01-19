@@ -139,18 +139,6 @@ A production-ready, scalable real-time messaging platform built with Spring Boot
 
 ---
 
-## 📦 Prerequisites
-
-Before running this project, ensure you have:
-
-- **Java 21** or higher ([Download](https://openjdk.java.net/))
-- **Maven 3.8+** ([Download](https://maven.apache.org/))
-- **Docker & Docker Compose** ([Download](https://www.docker.com/))
-- **MongoDB Atlas Account** (Free tier available at [mongodb.com](https://www.mongodb.com/))
-- **Git** ([Download](https://git-scm.com/))
-
----
-
 ## 🚀 Getting Started
 
 ### 1. Clone the Repository
@@ -318,28 +306,6 @@ curl -X POST http://localhost:5050/api/message/ \
   }'
 ```
 
-### WebSocket Endpoint
-
-**Connect to WebSocket:**
-```javascript
-const socket = new SockJS('http://localhost:5050/ws-chat');
-const stompClient = Stomp.over(socket);
-
-stompClient.connect({}, function(frame) {
-    // Subscribe to message topic
-    stompClient.subscribe('/topic/messages', function(message) {
-        console.log('Received:', JSON.parse(message.body));
-    });
-    
-    // Send message
-    stompClient.send('/app/chat.send', {}, JSON.stringify({
-        chatId: 'CHAT_ID',
-        senderId: 'SENDER_ID',
-        content: 'Hello via WebSocket!'
-    }));
-});
-```
-
 ---
 
 ## 🔐 Environment Variables
@@ -424,96 +390,6 @@ docker exec -it yappify-kafka kafka-topics --list --bootstrap-server localhost:9
 
 ### Using Postman
 
-1. **Import Collection** (if provided)
-2. **Set Environment Variables:**
-   ```
-   base_url = http://localhost:5050
-   ```
-
-3. **Test Flow:**
-   - Register two users (Alice, Bob)
-   - Login as Alice (save token & userId)
-   - Create chat between Alice & Bob
-   - Send messages
-   - Create group chat
-   - Test group operations
-
-### Using cURL
-
-**Complete Test Sequence:**
-
-```bash
-# 1. Register User
-curl -X POST http://localhost:5050/api/user/ \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Alice","email":"alice@test.com","password":"password123"}'
-
-# Save the returned token and userId
-
-# 2. Create Chat
-curl -X POST http://localhost:5050/api/chat/ \
-  -H "Content-Type: application/json" \
-  -H "userId: ALICE_USER_ID" \
-  -H "Authorization: Bearer ALICE_TOKEN" \
-  -d '{"userId":"BOB_USER_ID"}'
-
-# 3. Send Message
-curl -X POST http://localhost:5050/api/message/ \
-  -H "Content-Type: application/json" \
-  -H "userId: ALICE_USER_ID" \
-  -H "Authorization: Bearer ALICE_TOKEN" \
-  -d '{"chatId":"CHAT_ID","content":"Hello!"}'
-```
-
----
-
-## 📁 Project Structure
-
-```
-yappify-chat/
-├── src/
-│   ├── main/
-│   │   ├── java/com/yappifychatapp/
-│   │   │   ├── config/              # Configuration classes
-│   │   │   │   ├── JWTAuthenticationFilter.java
-│   │   │   │   ├── PasswordEncoderConfig.java
-│   │   │   │   ├── SecurityConfig.java
-│   │   │   │   └── WebSocketConfig.java
-│   │   │   ├── controllers/         # REST Controllers
-│   │   │   │   ├── ChatController.java
-│   │   │   │   ├── MessageController.java
-│   │   │   │   ├── UserController.java
-│   │   │   │   └── ChatWebSocketController.java
-│   │   │   ├── dto/                 # Data Transfer Objects
-│   │   │   │   ├── AuthResponse.java
-│   │   │   │   ├── LoginRequest.java
-│   │   │   │   ├── RegisterRequest.java
-│   │   │   │   └── ChatMessageDTO.java
-│   │   │   ├── models/              # Entity Models
-│   │   │   │   ├── User.java
-│   │   │   │   ├── Chat.java
-│   │   │   │   └── Message.java
-│   │   │   ├── repositories/        # Data Access Layer
-│   │   │   │   ├── UserRepository.java
-│   │   │   │   ├── ChatRepository.java
-│   │   │   │   └── MessageRepository.java
-│   │   │   ├── services/            # Business Logic
-│   │   │   │   ├── UserService.java
-│   │   │   │   ├── ChatService.java
-│   │   │   │   └── MessageService.java
-│   │   │   └── utils/               # Utility Classes
-│   │   │       └── JWTUtil.java
-│   │   └── resources/
-│   │       ├── application.properties
-│   │       └── application-docker.properties
-│   └── test/                        # Test files
-├── docker-compose.yml               # Docker orchestration
-├── Dockerfile                       # Application container
-├── pom.xml                         # Maven dependencies
-├── .env.example                    # Environment template
-├── .gitignore
-└── README.md
-```
 
 ---
 
@@ -621,23 +497,6 @@ curl http://localhost:5050/actuator/metrics
 
 ---
 
-## 🚧 Roadmap
-
-- [ ] Frontend React application
-- [ ] Message encryption (E2E)
-- [ ] File/image sharing
-- [ ] Voice/video calling
-- [ ] Message reactions
-- [ ] Typing indicators
-- [ ] Online/offline status
-- [ ] Push notifications
-- [ ] Message search
-- [ ] Chat archiving
-- [ ] User blocking
-- [ ] Admin dashboard
-
----
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please follow these steps:
@@ -656,19 +515,6 @@ Contributions are welcome! Please follow these steps:
    git push origin feature/AmazingFeature
    ```
 5. **Open a Pull Request**
-
-### Development Guidelines
-- Follow Java code conventions
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation
-- Ensure all tests pass
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
@@ -691,19 +537,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📞 Support
-
-If you have any questions or need help, feel free to:
-- Open an issue on GitHub
-- Contact via email
-- Check existing documentation
-
----
-
-## 🌟 Show Your Support
-
-Give a ⭐️ if this project helped you!
-
----
-
-**Made with ❤️ and ☕ by Vishwapranav**
