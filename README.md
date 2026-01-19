@@ -21,7 +21,9 @@ A production-ready, scalable real-time messaging platform built with Spring Boot
 - [Environment Variables](#-environment-variables)
 - [Docker Deployment](#-docker-deployment)
 - [Testing](#-testing)
-
+- [Contrinuting](#-contributing)
+- [Author](#-author)
+- [Acknowledgements](#-acknowledgements)
 ---
 
 ## ✨ Features
